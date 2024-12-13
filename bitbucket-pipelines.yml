@@ -1,0 +1,33 @@
+image: python:3.9-slim
+
+pipelines:
+  default:
+    - step:
+        name: Install Dependencies
+        caches:
+          - pip
+        script:
+          - apt-get update && apt-get install -y curl
+          - pip install --upgrade pip setuptools
+          - pip install snowflake-cli
+    - step:
+        name: Configure Snowflake CLI
+        script:
+          - mkdir -p ~/.snowflake
+          - |
+            cat <<EOF > ~/.snowflake/connections.toml
+            [nativeapp]
+            account = "$SNOWFLAKE_ACCOUNT"
+            user = "$SNOWFLAKE_USER"
+            password = "$SNOWFLAKE_PASSWORD"
+            EOF
+          - chmod 600 ~/.snowflake/connections.toml
+          - snow connection test -c my_connection
+
+    - step:
+        name: Deploy Snowflake Native App
+        deployment: production
+        script:
+          - snow app version create v1_0 -c my_connection
+          - snow app version list -c my_connection
+          - snow app run --version V1_0 -c my_connection

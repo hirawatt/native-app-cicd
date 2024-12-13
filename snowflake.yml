@@ -1,0 +1,21 @@
+definition_version: 2
+entities:
+   hello_snowflake_package:
+      type: application package
+      identifier: myapp_pkg
+      stage: stage_content.hello_snowflake_stage
+      manifest: app/manifest.yml
+      artifacts:
+         - src: app/*
+           dest: ./
+         - python/hello_python.py  
+         - streamlit/hello_snowflake.py    
+      meta:
+         post_deploy:
+            - sql_script: scripts/shared_content.sql
+   hello_snowflake_app:
+      type: application
+      identifier: myapp_<% fn.get_username() %>
+      from:
+         target: hello_snowflake_package
+      debug: false
